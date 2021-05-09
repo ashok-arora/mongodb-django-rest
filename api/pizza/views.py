@@ -11,9 +11,13 @@ from rest_framework.decorators import api_view
 
 @api_view(['POST'])
 def create_pizza(request):
+    # print(request.data)
     pizza_data = JSONParser().parse(request)
+    # print(pizza_data)
     pizza_serializer = PizzaSerializer(data=pizza_data)
     if pizza_serializer.is_valid():
+        if pizza_data['ptype'] not in ('Rectangle', 'Square'):
+            return JsonResponse({'message': 'Type can be either \'Rectangle\' or \'Square\' only'}, status=status.HTTP_400_BAD_REQUEST)
         pizza_serializer.save()
         return JsonResponse(pizza_serializer.data, status=status.HTTP_201_CREATED) 
     return JsonResponse(pizza_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -24,11 +28,11 @@ def list_pizza(request):
     
     size = request.GET.get('size', None)
     if size is not None:
-            pizza = pizza.filter(title__icontains=size)
+            pizza = pizza.filter(size__icontains=size)
 
     ptype = request.GET.get('ptype', None)
     if ptype is not None:
-            pizza = pizza.filter(title__icontains=ptype)
+            pizza = pizza.filter(ptype__icontains=ptype)
     
     tutorials_serializer = PizzaSerializer(pizza, many=True)
     return JsonResponse(tutorials_serializer.data, safe=False)
@@ -37,16 +41,22 @@ def list_pizza(request):
 
 @api_view(['PUT'])
 def edit_pizza(request, pk):
-    pizza = Pizza.objects.get(pk=pk)
-    pizza_data = JSONParser().parse(request) 
-    pizza_serializer = PizzaSerializer(pizza, data=pizza_data) 
-    if pizza_serializer.is_valid(): 
-        pizza_serializer.save() 
-        return JsonResponse(pizza_serializer.data, status=status.HTTP_200_OK) 
-    return JsonResponse(pizza_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+    try:
+        pizza = Pizza.objects.get(pk=pk)
+        pizza_data = JSONParser().parse(request) 
+        pizza_serializer = PizzaSerializer(pizza, data=pizza_data) 
+        if pizza_serializer.is_valid(): 
+            pizza_serializer.save() 
+            return JsonResponse(pizza_serializer.data, status=status.HTTP_200_OK) 
+        return JsonResponse(pizza_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+    except:
+        return JsonResponse({'message': 'Pizza does not exist!'}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['DELETE'])
 def delete_pizza(request, pk):
-    pizza = Pizza.objects.get(pk=pk)
-    pizza.delete() 
-    return JsonResponse({'message': 'Pizza deleted successfully!'}, status=status.HTTP_200_OK)
+    try:
+        pizza = Pizza.objects.get(pk=pk)
+        pizza.delete() 
+        return JsonResponse({'message': 'Pizza deleted successfully!'}, status=status.HTTP_200_OK)
+    except:
+        return JsonResponse({'message': 'Pizza does not exist!'}, status=status.HTTP_400_BAD_REQUEST) 
