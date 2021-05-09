@@ -1,6 +1,9 @@
 from django.conf.urls import url 
 from pizza import views 
- 
+from rest_framework import routers
+
+router = routers.DefaultRouter()
+
 urlpatterns = [ 
     url(r'^pizza/create', views.create_pizza),
     url(r'^pizza/list$', views.list_pizza),
